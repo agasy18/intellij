@@ -164,11 +164,17 @@ public class BlazeAndroidSyncPlugin implements BlazeSyncPlugin {
     if (!isAndroidWorkspace(blazeProjectData.getWorkspaceLanguageSettings())) {
       return;
     }
+    AndroidSdkPlatform androidSdkPlatform = null;
     BlazeAndroidSyncData syncData = blazeProjectData.getSyncState().get(BlazeAndroidSyncData.class);
-    if (syncData == null) {
-      return;
+    // If syncData is null then this could have been a directory only sync.  In this case, calculate
+    // the androidSdkPlatform directly from project view if the project SDK is not yet set.
+    // This ensures the android SDK is available even if the initial project sync fails or simply
+    // takes too long.
+    if (syncData == null && ProjectRootManagerEx.getInstanceEx(project).getProjectSdk() == null) {
+      androidSdkPlatform = AndroidSdkFromProjectView.getAndroidSdkPlatform(context, projectViewSet);
+    } else if (syncData != null) {
+      androidSdkPlatform = syncData.androidSdkPlatform;
     }
-    AndroidSdkPlatform androidSdkPlatform = syncData.androidSdkPlatform;
     if (androidSdkPlatform == null) {
       return;
     }
